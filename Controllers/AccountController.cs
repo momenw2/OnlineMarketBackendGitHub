@@ -157,6 +157,27 @@ namespace OnlineMarketApi.Controllers
             return Ok(new { Token = token });
         }
 
+        private string GenerateToken(User user)
+        {
+            var key = Encoding.UTF8.GetBytes("your-super-secret-key");
+            var credentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+        new Claim(ClaimTypes.Name, user.FullName),
+        new Claim(ClaimTypes.Email, user.Email),
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+    };
+
+            var token = new JwtSecurityToken(
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(1), // Token expires in 1 hour
+                signingCredentials: credentials);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+
         [HttpGet("users")]
         [SwaggerOperation(Summary = "Get a paginated list of users", Description = "Returns users with pagination.")]
         public async Task<IActionResult> GetUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
