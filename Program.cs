@@ -53,7 +53,7 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 
-// Add Swagger
+// Add Swagger with custom operation filter
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "OnlineMarketApi", Version = "v1" });
@@ -81,7 +81,31 @@ builder.Services.AddSwaggerGen(c =>
             new string[] { }
         }
     });
+
+    c.OperationFilter<PlainTextOperationFilter>();
 });
+
+// Custom operation filter for Swagger
+public class PlainTextOperationFilter : IOperationFilter
+{
+    public void Apply(OpenApiOperation operation, OperationFilterContext context)
+    {
+        if (context.ApiDescription.ActionDescriptor.RouteValues["action"] == "GetProfile")
+        {
+            if (!operation.Responses["200"].Content.ContainsKey("text/plain"))
+            {
+                operation.Responses["200"].Content.Add("text/plain", new OpenApiMediaType());
+            }
+        }
+        else
+        {
+            if (!operation.Responses["200"].Content.ContainsKey("application/json"))
+            {
+                operation.Responses["200"].Content.Add("application/json", new OpenApiMediaType());
+            }
+        }
+    }
+}
 
 var app = builder.Build();
 
