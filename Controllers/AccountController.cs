@@ -179,16 +179,35 @@ namespace OnlineMarketApi.Controllers
 
 
         [HttpGet("users")]
-        [SwaggerOperation(Summary = "Get a paginated list of users", Description = "Returns users with pagination.")]
-        public async Task<IActionResult> GetUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> GetUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
+            if (page < 1 || pageSize < 1)
+                return BadRequest(new { message = "Page and PageSize must be greater than 0." });
+
             var users = await _context.Users
-                .Skip((pageNumber - 1) * pageSize)
+                .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .Select(u => new
+                {
+                    u.Id,
+                    u.FullName,
+                    u.Email,
+                    u.Gender,
+                    u.BirthDate,
+                    u.PhoneNumber
+                })
                 .ToListAsync();
 
-            return Ok(users);
+            var totalUsers = await _context.Users.CountAsync();
+            return Ok(new
+            {
+                Data = users,
+                CurrentPage = page,
+                TotalPages = (int)Math.Ceiling(totalUsers / (double)pageSize)
+            });
         }
+
 
         [HttpPost("logout")]
         public IActionResult Logout()
