@@ -99,5 +99,14 @@ namespace OnlineMarketApi.Controllers
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            // Clear the JWT token from client-side
+            Response.Headers.Add("Clear-Site-Data", "\"cookies\", \"storage\"");
+
+            return Ok(new { status = (string)null, message = "Logged Out" });
+        }
+
     }
 
