@@ -73,6 +73,31 @@ namespace OnlineMarketApi.Controllers
         }
 
 
+        private string GenerateToken(User user)
+        {
+            var key = Encoding.UTF8.GetBytes("your-super-secret-key-that-is-long-enough");
+            var signingKey = new SymmetricSecurityKey(key);
+            var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new Claim(ClaimTypes.Name, user.Email),
+        new Claim(ClaimTypes.Email, user.Email),
+        new Claim("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/authentication",
+            Guid.NewGuid().ToString())
+    };
+
+            var token = new JwtSecurityToken(
+                issuer: "your-issuer",
+                audience: "your-audience",
+                claims: claims,
+                expires: DateTime.Now.AddHours(1),
+                signingCredentials: credentials
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
 
     }
 
