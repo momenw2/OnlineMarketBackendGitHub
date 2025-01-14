@@ -106,6 +106,7 @@ namespace OnlineMarketApi.Controllers
         }
 
         [HttpPost("register")]
+        [SwaggerOperation(Summary = "Register a new user", Description = "Create a new user with required fields.")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto userDto)
         {
             _logger.LogInformation("Register endpoint called.");
@@ -143,6 +144,7 @@ namespace OnlineMarketApi.Controllers
 
 
     [HttpPost("login")]
+        [SwaggerOperation(Summary = "Login an existing user", Description = "Authenticate user and return a JWT token.")]
         public async Task<IActionResult> Login([FromBody] UserLoginDto userDto)
         {
             if (userDto == null)
