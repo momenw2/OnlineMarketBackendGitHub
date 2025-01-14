@@ -2,16 +2,17 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using PostgreSQL.Data;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add DbContext for PostgreSQL
+// 1. Add DbContext for PostgreSQL
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("WebApiDatabase")));
 
-// Add JWT Authentication and Authorization
+// 2. Configure Authentication with JWT Bearer
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -27,25 +28,28 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = "your-issuer",
         ValidAudience = "your-audience",
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("your-super-secret-key"))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("your-super-secret-key-that-is-long-enough"))
     };
 });
 
+// 3. Add Authorization middleware
 builder.Services.AddAuthorization();
 
-// Add CORS policy
+// 4. Add CORS policy
 builder.Services.AddCors(options =>
 {
+
     options.AddDefaultPolicy(builder =>
     {
-        builder.WithOrigins("http://localhost:3001")
+        builder.WithOrigins("http://localhost:3001") // Replace with your frontend port
                .AllowAnyHeader()
                .AllowAnyMethod()
                .AllowCredentials();
     });
+
 });
 
-// Add Controllers and JSON options
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -53,10 +57,13 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 
-// Add Swagger with custom operation filter
+
+// 6. Add Swagger with Bearer token configuration
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "OnlineMarketApi", Version = "v1" });
+
+
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -85,7 +92,28 @@ builder.Services.AddSwaggerGen(c =>
     c.OperationFilter<PlainTextOperationFilter>();
 });
 
-// Custom operation filter for Swagger
+// 7. Build the app
+var app = builder.Build();
+
+// 8. Configure the HTTP request pipeline
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+
+
+app.UseCors();
+app.UseAuthentication();        // Use authentication
+app.UseAuthorization();         // Use authorization
+
+app.MapControllers();
+
+app.Run();
+
+// Operation filter for Swagger
 public class PlainTextOperationFilter : IOperationFilter
 {
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
@@ -106,25 +134,3 @@ public class PlainTextOperationFilter : IOperationFilter
         }
     }
 }
-
-var app = builder.Build();
-
-// Enable Swagger middleware
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-// Add middleware for HTTPS redirection
-app.UseHttpsRedirection();
-
-// Apply CORS policy
-app.UseCors();
-
-app.UseAuthentication(); // Use authentication
-app.UseAuthorization();  // Use authorization
-
-app.MapControllers();
-
-app.Run();
