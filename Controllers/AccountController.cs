@@ -108,5 +108,52 @@ namespace OnlineMarketApi.Controllers
             return Ok(new { status = (string)null, message = "Logged Out" });
         }
 
+        [HttpGet("profile")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> GetProfile()
+        {
+            try
+            {
+                var email = User.FindFirst(ClaimTypes.Email)?.Value;
+
+                if (email == null)
+                {
+                    var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
+                    Console.WriteLine($"Authorization Header: {authHeader}");
+                    return Unauthorized(new { status = "Unauthorized", message = "Invalid token or user not found" });
+                }
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+                if (user == null)
+                {
+                    return Unauthorized(new { status = "Unauthorized", message = "User not found" });
+                }
+
+                var profile = new
+                {
+                    id = user.Id,
+                    fullName = user.FullName,
+                    birthDate = user.BirthDate.ToString("o"),
+                    gender = user.Gender,
+                    address = user.Address,
+                    email = user.Email,
+                    phoneNumber = user.PhoneNumber
+                };
+
+                if (Request.Headers["Accept"].ToString().Contains("text/plain"))
+                {
+                    var profileText = System.Text.Json.JsonSerializer.Serialize(profile);
+                    return Content(profileText, "text/plain");
+                }
+
+                return Ok(profile);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = "Error", message = ex.Message });
+            }
+        }
+
     }
 
