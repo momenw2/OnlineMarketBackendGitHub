@@ -77,6 +77,32 @@ namespace OnlineMarketApi.Controllers
         }
     }
 
+
+    [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] UserLoginDto userDto)
+        {
+            if (userDto == null)
+            {
+                return BadRequest("Login data is required");
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userDto.Email);
+            if (user == null || !BCrypt.Net.BCrypt.Verify(userDto.Password, user.Password))
+            {
+                return Unauthorized("Invalid email or password");
+            }
+
+            var token = GenerateToken(user);
+            return Ok(new { Token = token });
+        }
+
+public class UserLoginDto
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+    }
+
+
     public class UserRegisterDto
     {
         public string FullName { get; set; }
