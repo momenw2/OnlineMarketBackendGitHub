@@ -177,6 +177,33 @@ namespace OnlineMarketApi.Controllers
             return Ok(new { message = "Logged out successfully." });
         }
 
+        [HttpGet("profile")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> GetProfile()
+        {
+            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+            if (string.IsNullOrEmpty(email))
+                return Unauthorized(new { message = "Invalid token." });
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+                return NotFound(new { message = "User not found." });
+
+            var profile = new
+            {
+                user.Id,
+                user.FullName,
+                user.Email,
+                user.Address,
+                user.BirthDate,
+                user.Gender,
+                user.PhoneNumber
+            };
+
+            return Ok(profile);
+        }
+
+
 public class UserLoginDto
     {
         public string Email { get; set; }
