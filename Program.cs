@@ -92,6 +92,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Add middleware for HTTPS redirection
+app.UseHttpsRedirection();
+
+// Apply CORS policy
+app.UseCors();
+
+app.UseAuthentication(); // Use authentication
+app.UseAuthorization();  // Use authorization
+
 app.MapControllers();
 
 app.Run();
