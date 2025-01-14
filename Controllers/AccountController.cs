@@ -106,41 +106,35 @@ namespace OnlineMarketApi.Controllers
         }
 
         [HttpPost("register")]
-        [SwaggerOperation(Summary = "Register a new user", Description = "Create a new user with required fields.")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto userDto)
         {
-            _logger.LogInformation("Register endpoint called.");
-            if (userDto == null)
+            if (userDto == null || string.IsNullOrWhiteSpace(userDto.FullName) ||
+                string.IsNullOrWhiteSpace(userDto.Email) || string.IsNullOrWhiteSpace(userDto.Password))
             {
-                _logger.LogWarning("No user data provided.");
-                return BadRequest("User data is required");
+                return BadRequest("All fields are required.");
             }
 
             var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == userDto.Email);
             if (existingUser != null)
-            {
-                _logger.LogWarning("Email already in use: {Email}", userDto.Email);
                 return BadRequest("Email is already in use.");
-            }
 
             var user = new User
             {
                 FullName = userDto.FullName,
-                Password = BCrypt.Net.BCrypt.HashPassword(userDto.Password),
                 Email = userDto.Email,
+                Password = BCrypt.Net.BCrypt.HashPassword(userDto.Password),
                 Address = userDto.Address,
                 BirthDate = userDto.BirthDate,
                 Gender = userDto.Gender,
-                PhoneNumber = userDto.PhoneNumber,
-                Role = "User" // Default role assignment
+                PhoneNumber = userDto.PhoneNumber
             };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
-            _logger.LogInformation("User registered successfully: {Email}", userDto.Email);
 
-            return Ok(new { Message = "Registration successful" });
+            return Ok("User registered successfully.");
         }
+
     }
 
 
