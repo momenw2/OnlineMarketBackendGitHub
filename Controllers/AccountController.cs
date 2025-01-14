@@ -155,5 +155,46 @@ namespace OnlineMarketApi.Controllers
             }
         }
 
+        [HttpPut("profile")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> UpdateProfile([FromBody] ProfileUpdateRequest request)
+        {
+            try
+            {
+                var email = User.FindFirst(ClaimTypes.Email)?.Value;
+                if (email == null)
+                {
+                    return Unauthorized(new { status = "Error", message = "Invalid token" });
+                }
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+                if (user == null)
+                {
+                    return NotFound(new { status = "Error", message = "User not found" });
+                }
+
+                // Validate gender
+                if (!string.IsNullOrEmpty(request.Gender) &&
+                    !new[] { "Male", "Female" }.Contains(request.Gender))
+                {
+                    return BadRequest(new { status = "Error", message = "Invalid gender value" });
+                }
+
+                // Update user properties
+                user.FullName = request.FullName;
+                user.BirthDate = request.BirthDate;
+                user.Gender = request.Gender;
+                user.Address = request.Address;
+                user.PhoneNumber = request.PhoneNumber;
+
+                await _context.SaveChangesAsync();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = "Error", message = ex.Message });
+            }
+        }
+
     }
 
