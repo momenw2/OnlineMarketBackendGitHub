@@ -58,22 +58,28 @@ namespace OnlineMarketApi.Controllers
             return password.Length >= 8 && hasUpperCase && hasLowerCase && hasDigit && hasSpecialChar;
         }
 
+        private readonly ILogger<AccountController> _logger;
+
+        public AccountController(AppDbContext context, ILogger<AccountController> logger)
+        {
+            _context = context;
+            _logger = logger;
+        }
+
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto userDto)
         {
+            _logger.LogInformation("Register endpoint called.");
             if (userDto == null)
             {
+                _logger.LogWarning("No user data provided.");
                 return BadRequest("User data is required");
-            }
-
-            if (!IsPasswordStrong(userDto.Password))
-            {
-                return BadRequest("Password does not meet complexity requirements.");
             }
 
             var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == userDto.Email);
             if (existingUser != null)
             {
+                _logger.LogWarning("Email already in use: {Email}", userDto.Email);
                 return BadRequest("Email is already in use.");
             }
 
@@ -90,6 +96,7 @@ namespace OnlineMarketApi.Controllers
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
+            _logger.LogInformation("User registered successfully: {Email}", userDto.Email);
 
             return Ok(new { Message = "Registration successful" });
         }
