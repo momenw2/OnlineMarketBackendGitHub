@@ -203,6 +203,28 @@ namespace OnlineMarketApi.Controllers
             return Ok(profile);
         }
 
+        [HttpPut("profile")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> UpdateProfile([FromBody] ProfileUpdateRequest request)
+        {
+            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+            if (string.IsNullOrEmpty(email))
+                return Unauthorized(new { message = "Invalid token." });
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+                return NotFound(new { message = "User not found." });
+
+            user.FullName = request.FullName ?? user.FullName;
+            user.Address = request.Address ?? user.Address;
+            user.PhoneNumber = request.PhoneNumber ?? user.PhoneNumber;
+            user.Gender = request.Gender ?? user.Gender;
+            user.BirthDate = request.BirthDate ?? user.BirthDate;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Profile updated successfully." });
+        }
+
 
 public class UserLoginDto
     {
