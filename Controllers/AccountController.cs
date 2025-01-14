@@ -58,25 +58,19 @@ namespace OnlineMarketApi.Controllers
             return Ok(new { Token = token });
         }
 
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginRequest.Email);
 
+            if (user == null || !BCrypt.Net.BCrypt.Verify(loginRequest.Password, user.Password))
+            {
+                return Unauthorized();
+            }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            var token = GenerateToken(user); // Return token on successful login
+            return Ok(new { Token = token });
+        }
 
 
 
