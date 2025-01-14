@@ -131,7 +131,8 @@ namespace OnlineMarketApi.Controllers
                 Address = userDto.Address,
                 BirthDate = userDto.BirthDate,
                 Gender = userDto.Gender,
-                PhoneNumber = userDto.PhoneNumber
+                PhoneNumber = userDto.PhoneNumber,
+                Role = "User" // Default role assignment
             };
 
             _context.Users.Add(user);
