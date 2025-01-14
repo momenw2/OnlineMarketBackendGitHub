@@ -5,6 +5,35 @@ using System.Threading.Tasks;
 
 namespace OnlineMarketApi.Controllers
 {
+    public partial class AccountController : ControllerBase
+    {
+
+        private string GenerateToken(User user)
+        {
+            var key = Encoding.UTF8.GetBytes("your-secret-key-that-is-long-enough");
+            var signingKey = new SymmetricSecurityKey(key);
+            var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.FullName),
+                new Claim(ClaimTypes.Email, user.Email)
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: "your-issuer",
+                audience: "your-audience",
+                claims: claims,
+                expires: DateTime.Now.AddHours(1),
+                signingCredentials: credentials
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+    }
+
+
     [Route("api/account")]
     [ApiController]
     public class AccountController : ControllerBase
