@@ -45,12 +45,30 @@ namespace OnlineMarketApi.Controllers
             _context = context;
         }
 
+
+        private bool IsPasswordStrong(string password)
+        {
+            // Password must be at least 8 characters, contain at least one uppercase letter,
+            // one lowercase letter, one digit, and one special character.
+            var hasUpperCase = password.Any(char.IsUpper);
+            var hasLowerCase = password.Any(char.IsLower);
+            var hasDigit = password.Any(char.IsDigit);
+            var hasSpecialChar = password.Any(ch => "!@#$%^&*()".Contains(ch));
+
+            return password.Length >= 8 && hasUpperCase && hasLowerCase && hasDigit && hasSpecialChar;
+        }
+
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto userDto)
         {
             if (userDto == null)
             {
                 return BadRequest("User data is required");
+            }
+
+            if (!IsPasswordStrong(userDto.Password))
+            {
+                return BadRequest("Password does not meet complexity requirements.");
             }
 
             var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == userDto.Email);
