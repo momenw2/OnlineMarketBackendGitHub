@@ -169,6 +169,14 @@ namespace OnlineMarketApi.Controllers
             return Ok(users);
         }
 
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            // Clear client-side data (example: cookies and storage)
+            Response.Headers.Add("Clear-Site-Data", "\"cookies\", \"storage\"");
+            return Ok(new { message = "Logged out successfully." });
+        }
+
 public class UserLoginDto
     {
         public string Email { get; set; }
