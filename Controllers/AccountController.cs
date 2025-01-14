@@ -58,6 +58,7 @@ namespace OnlineMarketApi.Controllers
             return Ok(new { Token = token });
         }
 
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
         {
@@ -71,6 +72,8 @@ namespace OnlineMarketApi.Controllers
             var token = GenerateToken(user); // Return token on successful login
             return Ok(new { Token = token });
         }
+
+
 
 
         private string GenerateToken(User user)
@@ -99,6 +102,9 @@ namespace OnlineMarketApi.Controllers
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
+
+
+
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
@@ -107,6 +113,9 @@ namespace OnlineMarketApi.Controllers
 
             return Ok(new { status = (string)null, message = "Logged Out" });
         }
+
+
+
 
         [HttpGet("profile")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -155,6 +164,7 @@ namespace OnlineMarketApi.Controllers
             }
         }
 
+
         [HttpPut("profile")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> UpdateProfile([FromBody] ProfileUpdateRequest request)
@@ -196,5 +206,23 @@ namespace OnlineMarketApi.Controllers
             }
         }
 
+
+
     }
+
+    public class LoginRequest
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+    }
+
+    public class ProfileUpdateRequest
+    {
+        public string FullName { get; set; }
+        public DateTime BirthDate { get; set; }
+        public string Gender { get; set; }
+        public string Address { get; set; }
+        public string PhoneNumber { get; set; }
+    }
+}
 
