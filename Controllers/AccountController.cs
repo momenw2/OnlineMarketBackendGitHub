@@ -162,6 +162,18 @@ namespace OnlineMarketApi.Controllers
             return Ok(new { Token = token });
         }
 
+        [HttpGet("users")]
+        [SwaggerOperation(Summary = "Get a paginated list of users", Description = "Returns users with pagination.")]
+        public async Task<IActionResult> GetUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        {
+            var users = await _context.Users
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return Ok(users);
+        }
+
 public class UserLoginDto
     {
         public string Email { get; set; }
